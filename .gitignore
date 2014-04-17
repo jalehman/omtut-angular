@@ -4,8 +4,8 @@ pom.xml
 /classes/
 /targets/
 /resources/public/js/
+/resources/public/bower_components/
 /out/
 /target/
 .nrepl-port
 .lein-deps-sum
-/bower_components/
