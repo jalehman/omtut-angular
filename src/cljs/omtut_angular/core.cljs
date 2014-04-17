@@ -44,9 +44,9 @@
 (defroute "/phones/:phone-id" {:as params}
   (put! nav-ch [:nav {:state :phone-view :route-params params}]))
 
-;; The catch-all route
+;; The catch-all route. If we reach this, we put a non-matching state. See the root component for more.
 (defroute "*" []
-  (put! nav-ch [:nav {:state :phones-list}]))
+  (put! nav-ch [:nav {:state :no-op}]))
 
 ;; ============================================================================
 ;; Router & Handlers
@@ -70,10 +70,10 @@
 
 ;; Our stub phone-detail "view"
 (defn phone-detail
-  [phone owner]
+  [phone-id owner]
   (om/component
    (html
-    [:div "TBD: detail view for " [:span (:id phone)]])))
+    [:div "TBD: detail view for " [:span phone-id]])))
 
 (defn phones-list
   [phones owner]
@@ -119,7 +119,8 @@
     om/IWillMount
     (will-mount [_]
       (let [{:keys [events kill]} (om/get-state owner :chans)
-            ;; We create a new channel that ...
+            ;; We create a new channel that will pickc up events both internal to the component,
+            ;; as well as nav events.
             events' (async/merge [events nav-ch])]
         (go (loop []
               (alt!
@@ -133,14 +134,13 @@
     (render-state [_ state]
       (html
        [:div.container
+        ;; And here's our equivalent of `ng-view`. When we match a state, render that
+        ;; view into the app. Otherwise, change location to a base route.
         (case (:state location)
           :phones-list (om/build phones-list phones {:state state})
-          :phone-view  (om/build phone-detail
-                                 (-> (filter #(= (:id %) (get-in location [:route-params :phone-id]))
-                                             phones)
-                                     first) {:state state})
-          (change-location! "/phones"))
-        ]))))
+          :phone-view  (om/build phone-detail (get-in location [:route-params :phone-id])
+                                 {:state state})
+          (change-location! "/phones"))]))))
 
 ;; ============================================================================
 ;; Om Initialization
