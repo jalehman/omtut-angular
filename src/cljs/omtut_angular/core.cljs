@@ -37,6 +37,7 @@
           [:li (:name phone)
            [:p (:snippet phone)]])]))))
 
+;; This is done so that the tests play nicely
 (defn run! []
   (om/root omtut-angular-app app-state
          {:target (.getElementById js/document "content")}))
