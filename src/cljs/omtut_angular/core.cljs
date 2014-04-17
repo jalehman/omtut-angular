@@ -51,18 +51,24 @@
 ;; ============================================================================
 ;; Router & Handlers
 
+;; Our get-phones function changes a bit because our cursor is changing in structure.
 (defn get-phones
   "Fetch phones.json from the server and transact into the cursor."
   [app]
   (go (let [res (<! (http/get "phones/phones.json"))]
-        (om/update! app [:phones] (:body res)))))
+        (om/update! app [:phones-list :phones] (:body res)))))
 
 (defn handle-event
   [app owner [event data]]
   (case event
     :load-phones (get-phones app)
-    ;; Events of type "nav" are handled by transacting the route data into the cursor
-    :nav         (om/update! app [:location] data)
+    ;; Events of type "nav" are handled by transacting the route data into the cursor under the
+    ;; :location key. We also put the :route-params into the cursor under the state's key. Note
+    ;; the changes to the cursor below (reasons for doing things this way will become more
+    ;; apparent later).
+    :nav         (do
+                   (om/update! app [:location] data)
+                   (om/update! app [(:state data) :route-params] (:route-params data)))
     nil))
 
 ;; ============================================================================
@@ -70,17 +76,21 @@
 
 ;; Our stub phone-detail "view"
 (defn phone-detail
-  [phone-id owner]
+  [{:keys [phones route-params]} owner]
   (om/component
    (html
-    [:div "TBD: detail view for " [:span phone-id]])))
+    [:div "TBD: detail view for " [:span (:phone-id route-params)]])))
 
 (defn phones-list
-  [phones owner]
+  [{:keys [phones]} owner]
   (reify
     om/IInitState
     (init-state [_]
       {:query "" :order-prop "age"})
+    om/IWillMount
+    (will-mount [_]
+      ;; The phones-list component is now responsible for firing of the :load-phones event.
+      (put! (om/get-state owner [:chans :events]) [:load-phones nil]))
     om/IRenderState
     (render-state [_ {:keys [query order-prop]}]
       (html
@@ -111,7 +121,7 @@
 ;; Root Component
 
 (defn omtut-angular-app
-  [{:keys [phones location] :as app} owner]
+  [{:keys [location] :as app} owner]
   (reify
     om/IInitState
     (init-state [_]
@@ -119,14 +129,13 @@
     om/IWillMount
     (will-mount [_]
       (let [{:keys [events kill]} (om/get-state owner :chans)
-            ;; We create a new channel that will pickc up events both internal to the component,
+            ;; We create a new channel that will pick up events both internal to the component,
             ;; as well as nav events.
             events' (async/merge [events nav-ch])]
         (go (loop []
               (alt!
                events' ([v c] (handle-event app owner v) (recur))
-               kill    ([v c] (prn "Closing event loop.")))))
-        (put! events [:load-phones nil])))
+               kill    ([v c] (prn "Closing event loop.")))))))
     om/IWillUnmount
     (will-unmount [_]
       (put! (om/get-state owner [:chans :kill]) :kill))
@@ -136,18 +145,25 @@
        [:div.container
         ;; And here's our equivalent of `ng-view`. When we match a state, render that
         ;; view into the app. Otherwise, change location to a base route.
+
+        ;; Note: putting the route-params into the cursor under the state's key allows us
+        ;; build the sub-components such that they are only aware of their own path into the
+        ;; cursor. This is generally considered a best practice.
         (case (:state location)
-          :phones-list (om/build phones-list phones {:state state})
-          :phone-view  (om/build phone-detail (get-in location [:route-params :phone-id])
-                                 {:state state})
+          :phones-list (om/build phones-list (:phones-list app) {:state state})
+          :phone-view  (om/build phone-detail (:phone-view app) {:state state})
           (change-location! "/phones"))]))))
 
 ;; ============================================================================
 ;; Om Initialization
 
+;; We now have a key for each state, and a :phones entry under each. The reasoning behind this
+;; will be more apparent in the next step.
 (def app-state
   (atom
-   {:phones [] :location {}}))
+   {:phones-list {:phones [] :route-params nil}
+    :phone-view  {:phones {} :route-params {}}
+    :location {}}))
 
 (defn run! []
   (om/root omtut-angular-app app-state
