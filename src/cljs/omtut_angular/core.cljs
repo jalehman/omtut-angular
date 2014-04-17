@@ -42,16 +42,42 @@
 ;; ============================================================================
 ;; Router & Handlers
 
-(defn get-phones
-  "Fetch phones.json from the server and transact into the cursor."
+(defn- get-phones-list*
   [app]
-  (go (let [res (<! (http/get "phones/phones.json"))]
-        (om/update! app [:phones-list :phones] (:body res)))))
+  (let [c (chan)]
+    (go (if-not (empty? (get-in @app [:phones-list :phones]))
+          (put! c (get-in @app [:phones-list :phones]))
+          (let [{body :body} (<! (http/get "phones/phones.json"))]
+            (put! c body))))
+    c))
+
+(defn get-phones-list
+  "Fetch phones.json from the server and transact into the cursor. If the phones
+   list already exists in the cursor, don't go out to the server."
+  [app]
+  (go (let [ps (<! (get-phones-list* app))]
+        (om/update! app [:phones-list :phones] ps))))
+
+(defn- get-phone-detail*
+  [app phone-id]
+  (let [c (chan)]
+    (go (if-let [pd (get-in @app [:phone-view :phones phone-id])]
+          (put! c pd)
+          (let [{body :body} (<! (http/get (str "phones/" phone-id ".json")))]
+            (put! c body))))
+    c))
+
+(defn get-phone-detail
+  "Mirrors the list version, but with the phone detail."
+  [app phone-id]
+  (go (let [pd (<! (get-phone-detail* app phone-id))]
+        (om/update! app [:phone-view :phones phone-id] pd))))
 
 (defn handle-event
   [app owner [event data]]
   (case event
-    :load-phones (get-phones app)
+    :load-phones (get-phones-list app)
+    :load-phone  (get-phone-detail app data)
     :nav         (do
                    (om/update! app [:location] data)
                    (om/update! app [(:state data) :route-params] (:route-params data)))
@@ -60,11 +86,96 @@
 ;; ============================================================================
 ;; Sub-components
 
-(defn phone-detail
-  [{:keys [phones route-params]} owner]
+;; This helps a bit, but not much.
+(defn spec-list
+  [data owner {:keys [pairs title]}]
   (om/component
    (html
-    [:div "TBD: detail view for " [:span (:phone-id route-params)]])))
+    [:li [:span title]
+     [:dl
+      (for [[name k] pairs]
+        [:span
+         [:dt name]
+         [:dd (get data k)]])]])))
+
+(defn phone-detail
+  [{:keys [phones route-params]} owner]
+  (reify
+    om/IWillMount
+    (will-mount [_]
+      ;; On mount, trigger the :load-phone event. The cool thing about this is
+      ;; that if the phone already exists in the cursor under the phone-id, we won't
+      ;; hit the server for it.
+      (put! (om/get-state owner [:chans :events])
+            [:load-phone (:phone-id (om/value route-params))]))
+    om/IRenderState
+    (render-state [_ _]
+      (let [{:keys [name images] :as phone} (get phones (:phone-id route-params))]
+        ;; Yuck. Lots of boilerplate HTML stuff here. Nothing really interesting
+        (html
+         [:div
+          [:img {:src (first images)}]
+          [:h1 name]
+          [:p (:description phone)]
+
+          [:ul.phone-thumbs
+           (for [img images]
+             [:li [:img {:src img}]])]
+
+          [:ul.specs
+           [:li [:span "Availability and Networks"]
+            [:dl
+             [:dt "Availability"]
+             (map (fn [a]
+                    [:dd {:dangerouslySetInnerHTML {:__html a}}])
+                  (:availability phone))]]
+
+           (om/build spec-list (:battery phone)
+                     {:opts {:title "Battery"
+                             :pairs [["type" :type] ["Talk Time" :talkTime]
+                                     ["Standby time (max)" :standbyTime]]}})
+
+           (om/build spec-list (:storage phone)
+                     {:opts {:title "Storage and Memory"
+                             :pairs [["RAM" :ram] ["Internal Storage" :flash]]}})
+
+           (om/build spec-list (:connectivity phone)
+                     {:opts {:title "Connectivity"
+                             :pairs [["Network Support" :cell] ["WiFi" :wifi] ["GPS" :gps]
+                                     ["Bluetooth" :bluetooth] ["Infrared" :infrared]]}})
+
+           (om/build spec-list (:android phone)
+                     {:opts {:title "Android"
+                             :pairs [["OS Version" :os] ["UI" :ui]]}})
+
+           [:li [:span "Size and Weight"]
+            [:dl
+             [:dt "Dimensions"]
+             (map (fn [dim] [:dd dim]) (get-in phone [:sizeAndWeight :dimensions]))
+             [:dt "Weight"]
+             [:dd (get-in phone [:sizeAndWeight :weight])]]]
+
+           (om/build spec-list (:display phone)
+                     {:opts {:title "Display"
+                             :pairs [["Screen size" :screenSize]
+                                     ["Screen resolution" :screenResolution]
+                                     ["Touch screen" :touchScreen]]}})
+
+           (om/build spec-list (:hardware phone)
+                     {:opts {:title "Hardware"
+                             :pairs [["CPU" :cpu] ["USB" :usb] ["FM Radio" :fmRadio]
+                                     ["Audio / headphone jack" :audioJack]
+                                     ["Accelerometer" :accelerometer]]}})
+
+           [:li [:span "Camera"]
+            [:dl
+             [:dt "Primary"]
+             [:dd (get-in phone [:camera :primary])]
+             [:dt "Features"]
+             [:dd (clojure.string/join ", " (get-in phone [:camera :features]))]]]
+
+           [:li [:span "Additional Features"]
+            [:dd (:additionalFeatures phone)]]]])))))
 
 (defn phones-list
   [{:keys [phones]} owner]
@@ -78,28 +189,29 @@
     om/IRenderState
     (render-state [_ {:keys [query order-prop]}]
       (html
-       [:div.row
-        [:div.col-lg-2
-         "Search: "
-         [:input
-          {:type "text" :value query
-           :on-change #(handle-change % owner [:query])}]
+       [:div.container
+        [:div.row
+         [:div.col-lg-2
+          "Search: "
+          [:input
+           {:type "text" :value query
+            :on-change #(handle-change % owner [:query])}]
 
-         "Sort by:"
-         [:select {:on-click #(handle-change % owner [:order-prop])
-                   :default-value order-prop}
-          [:option {:value "name"} "Alphabetical"]
-          [:option {:value "age"}  "Newest"]]]
+          "Sort by:"
+          [:select {:on-click #(handle-change % owner [:order-prop])
+                    :default-value order-prop}
+           [:option {:value "name"} "Alphabetical"]
+           [:option {:value "age"}  "Newest"]]]
 
-        [:div.col-lg-10
-         [:ul.phones
-          (for [phone (->> (filter #(search query (om/value %) [:name :snippet]) phones)
-                           (sort-by (keyword order-prop)))]
-            [:li.thumbnail
-             [:a.thumb {:href (str "#/phones/" (:id phone))}
-              [:img {:src (:imageUrl phone)}]]
-             [:a.phone-name {:href (str "#/phones/" (:id phone))} (:name phone)]
-             [:p (:snippet phone)]])]]]))))
+         [:div.col-lg-10
+          [:ul.phones
+           (for [phone (->> (filter #(search query (om/value %) [:name :snippet]) phones)
+                            (sort-by (keyword order-prop)))]
+             [:li.thumbnail
+              [:a.thumb {:href (str "#/phones/" (:id phone))}
+               [:img {:src (:imageUrl phone)}]]
+              [:a.phone-name {:href (str "#/phones/" (:id phone))} (:name phone)]
+              [:p (:snippet phone)]])]]]]))))
 
 ;; ============================================================================
 ;; Root Component
@@ -124,11 +236,10 @@
     om/IRenderState
     (render-state [_ state]
       (html
-       [:div.container
-        (case (:state location)
-          :phones-list (om/build phones-list (:phones-list app) {:state state})
-          :phone-view  (om/build phone-detail (:phone-view app) {:state state})
-          (change-location! "/phones"))]))))
+       [:div (case (:state location)
+               :phones-list (om/build phones-list (:phones-list app) {:state state})
+               :phone-view  (om/build phone-detail (:phone-view app) {:state state})
+               (change-location! "/phones"))]))))
 
 ;; ============================================================================
 ;; Om Initialization
