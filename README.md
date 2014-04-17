@@ -11,7 +11,7 @@ The more resources out there that exist to help teach a piece of technology, the
 
 Each step of the original tutorial corresponds to a branch of the format `step-{x}`.
 
-This one isn't quite as in-depth as my other tutorial [omtut-starter](), which goes through all of the Om concepts in quite a bit of detail. That's a recommended starting point. The point of this one is to illustrate an approach to building a slightly more complicated Om app with some compare and contrast to a more familiar way of doing things.
+This one isn't quite as in-depth as my other tutorial [omtut-starter](https://github.com/jalehman/omtut-starter), which goes through all of the Om concepts in quite a bit of detail. That's a recommended starting point. The point of this one is to illustrate an approach to building a slightly more complicated Om app with some compare and contrast to a more familiar way of doing things.
 
 Each step has lots of comments that go over what changed from the last step, why the change was made, and other ramblings.
 
@@ -21,7 +21,7 @@ I've made an attempt to make some tests work, and some of them even do!
 
 I'll confess that I am not the most avid tester, so not all of the Angular tutorial tests are present. I've had a difficult time reproducing some of them, paritcularly the end-to-end tests, for which PhantomJS doesn't work.
 
-I borrowed some previous work from [sgrove's]() app [Omchaya]() (without that I probably would not have gotten far -- thanks Sean!) and added a few of my own bits and pieces.
+I borrowed some previous work from [sgrove's](https://github.com/sgrove) app [Omchaya](https://github.com/sgrove/omchaya) (without that I probably would not have gotten far -- thanks Sean!) and added a few of my own bits and pieces.
 
 What's working is:
 + A few tests!
