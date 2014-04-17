@@ -8,6 +8,9 @@
 
 (defn handle-change [e owner ks]
   (let [text (.. e -target -value)]
+;;     (prn "IN HANDLE_CHANGE:")
+;;     (.log js/console (clj->js (.. e -target -value)))
+;;     (prn "=========")
     (om/set-state! owner ks text)))
 
 (defn- extract-query-text

@@ -7,13 +7,13 @@
             [omtut-angular.core :as core])
   (:use-macros [dommy.macros :only [node sel sel1]]))
 
-(deftest phones-render?
+(deftest phones-render-correctly?
   (let [data {:phones
-              [{:name "Nexus S"
+              [{:name "Nexus S" :age 1
                 :snippet "Fast just got faster with Nexus S."}
-               {:name "Motorola XOOM with Wi-Fi"
+               {:name "Motorola XOOM with Wi-Fi" :age 2
                 :snippet "The Next, Next Generation tablet."}
-               {:name "MOTOROLA XOOM"
+               {:name "MOTOROLA XOOM" :age 3
                 :snippet "The Next, Next Generation tablet."}]}]
 
     (testing "Three phones render"
@@ -44,4 +44,26 @@
                 (common/wrap-component core/omtut-angular-app
                                        :state {:query "motorola"})
                 data {:target c})
-               [(count (sel c :li)) (dommy/value (sel1 c :input))]))))))
+               [(count (sel c :li)) (dommy/value (sel1 c :input))]))))
+
+    (testing "Can control phone order via the drop-down select box"
+      (is (= ["Motorola XOOM with Wi-Fi" "MOTOROLA XOOM"]
+             (let [c (common/new-container!)]
+               (om/root
+                (common/wrap-component core/omtut-angular-app
+                                       :state {:query "tablet"})
+                data {:target c})
+               (mapv dommy/text (sel c [:li :span])))))
+
+;;       For whatever reason, I cannot get this test to work.
+
+;;       (is (= ["MOTOROLA XOOM" "Motorola XOOM with Wi-Fi"]
+;;              (let [c (common/new-container!)]
+;;                (om/root
+;;                 (common/wrap-component core/omtut-angular-app
+;;                                        :state {:query "tablet"})
+;;                 data {:target c})
+;;                (js/React.addons.TestUtils.Simulate.click
+;;                 (sel1 c "option[value=\"name\"]"))
+;;                (mapv dommy/text (sel c [:li :span])))))
+      )))

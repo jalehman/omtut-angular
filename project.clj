@@ -15,6 +15,7 @@
                  [secretary "1.1.0"]
                  [sablono "0.2.14"]
                  [om "0.5.3"]
+                 [com.facebook/react "0.9.0.1"]
                  ;; Testing
                  [prismatic/dommy "0.1.2"]]
 
@@ -61,7 +62,7 @@
                         :compiler {:pretty-print true
                                    :output-dir "resources/private/js/"
                                    :output-to "resources/private/js/unit-test.js"
-                                   :preamble ["react/react.js"]
+                                   :preamble ["react/react_with_addons.js"]
                                    :externs ["react/externs/react.js"]
                                    :optimizations :whitespace}}
 

@@ -8,6 +8,7 @@
 
 (enable-console-print!)
 
+;; Add the age attributes into our cursor
 (def app-state
   (atom
    {:phones
@@ -23,15 +24,18 @@
   (reify
     om/IInitState
     (init-state [_]
+      ;; Our `order-prop` can be represented in component state.
       {:query "" :order-prop "age"})
     om/IRenderState
     (render-state [_ {:keys [query order-prop]}]
+      ;; Our `handle-change` function will pull a string value of `order-prop` from the
+      ;; event, so we store it as a string and call `keyword` on it here. Sorting only requires
+      ;; use of a built-in CLJS function!
       (let [phones' (->> (filter #(search query (om/value %) [:name :snippet]) phones)
                          (sort-by (keyword order-prop)))]
         (html
          [:div.container
           [:div.row
-           (.log js/console (clj->js phones'))
            [:div.col-lg-2
             "Search: "
             [:input
@@ -39,15 +43,16 @@
               :on-change #(handle-change % owner [:query])}]
 
             "Sort by:"
-            [:select {:on-change #(handle-change % owner [:order-prop])
-                      :default-value order-prop}
+            [:select {:on-click #(handle-change % owner [:order-prop])
+                      :value order-prop}
              [:option {:value "name"} "Alphabetical"]
              [:option {:value "age"}  "Newest"]]]
 
            [:div.col-lg-10
             [:ul
              (for [phone phones']
-               [:li (:name phone)
+               [:li
+                (:name phone)
                 [:p (:snippet phone)]])]]]])))))
 
 (defn run! []
