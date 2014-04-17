@@ -12,15 +12,11 @@
    :body (json/generate-string data)})
 
 (defroutes app-routes
-  (GET "/" [] (resp/redirect "/index.html"))
-
-  (GET "/test" [] (json-response
-                   {:message "You made it!"}))
-
-  (POST "/test" req (json-response
-                     {:message "Doing something something important..."}))
 
   (route/resources "/")
+
+  (GET "*" [] (resp/file-response "resources/public/index.html"))
+
   (route/not-found "Page not found"))
 
 (def app

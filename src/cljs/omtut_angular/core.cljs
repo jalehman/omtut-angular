@@ -17,8 +17,10 @@
   (reify
     om/IRender
     (render [_]
-      (html
-       [:div
-        [:h1 "omtut-angular is working!"]]))))
+      (let [text (str "yet" "!")]
+        (html
+         [:div
+          [:p (str "Nothing here " text)]])))))
 
-(om/root omtut-angular-app app-state {:target (.getElementById js/document "content")})
+(om/root omtut-angular-app app-state
+         {:target (.getElementById js/document "content")})
