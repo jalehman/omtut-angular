@@ -4,6 +4,8 @@ pom.xml
 /classes/
 /targets/
 /resources/public/js/
+/resources/private/
+/resources/public/bower_components
 /out/
 /target/
 .nrepl-port
