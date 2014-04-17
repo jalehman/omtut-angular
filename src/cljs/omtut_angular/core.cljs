@@ -16,10 +16,15 @@
   (reify
     om/IRender
     (render [_]
-      (let [text (str "yet" "!")]
-        (html
-         [:div
-          [:p (str "Nothing here " text)]])))))
+      ;; Our HTML will always be written in CLJS. No templates!
+      (html
+       [:ul
+        [:li
+         [:span "Nexus S"]
+         [:p "Fast just got faster with Nexus S"]]
+        [:li
+         [:span "Motorola XOOM with Wi-Fi"]
+         [:p "The Next, Next Generation tablet."]]]))))
 
 (om/root omtut-angular-app app-state
          {:target (.getElementById js/document "content")})
