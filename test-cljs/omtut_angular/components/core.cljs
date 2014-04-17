@@ -30,18 +30,18 @@
                 data {:target c})
                (count (sel c :li)))))
 
-      (is (= 1
+      (is (= [1 "nexus"]
              (let [c (common/new-container!)]
                (om/root
                 (common/wrap-component core/omtut-angular-app
                                        :state {:query "nexus"})
                 data {:target c})
-               (count (sel c :li)))))
+               [(count (sel c :li)) (dommy/value (sel1 c :input))])))
 
-      (is (= 2
+      (is (= [2 "motorola"]
              (let [c (common/new-container!)]
                (om/root
                 (common/wrap-component core/omtut-angular-app
                                        :state {:query "motorola"})
                 data {:target c})
-               (count (sel c :li))))))))
+               [(count (sel c :li)) (dommy/value (sel1 c :input))]))))))
