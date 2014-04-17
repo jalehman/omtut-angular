@@ -96,7 +96,7 @@
       (for [[name k] pairs]
         [:span
          [:dt name]
-         [:dd (get data k)]])]])))
+         [:dd (str (get data k))]])]])))
 
 (defn phone-detail
   [{:keys [phones route-params]} owner]
@@ -236,10 +236,16 @@
     om/IRenderState
     (render-state [_ state]
       (html
-       [:div (case (:state location)
-               :phones-list (om/build phones-list (:phones-list app) {:state state})
-               :phone-view  (om/build phone-detail (:phone-view app) {:state state})
-               (change-location! "/phones"))]))))
+       [:div
+        (case (:state location)
+          :phones-list (om/build phones-list (:phones-list app) {:state state})
+          :phone-view  (om/build phone-detail (:phone-view app) {:state state})
+          ;; Secretary will dispatch to the correct route before this point is reached;
+          ;; however, this will be triggered immediately afterwards due to the lack of
+          ;; a matching initial state, thus redirecting us to "/phones". This ensures
+          ;; that the desired page actually loads.
+          (when-not (= (:state location) :init)
+            (change-location! "/phones")))]))))
 
 ;; ============================================================================
 ;; Om Initialization
@@ -248,7 +254,7 @@
   (atom
    {:phones-list {:phones [] :route-params nil}
     :phone-view  {:phones {} :route-params {}}
-    :location {}}))
+    :location    {:state :init}}))
 
 (defn run! []
   (om/root omtut-angular-app app-state
