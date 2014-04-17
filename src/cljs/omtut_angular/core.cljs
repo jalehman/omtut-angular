@@ -1,11 +1,10 @@
 (ns omtut-angular.core
-    (:require-macros [cljs.core.async.macros :refer [go alt!]])
-    (:require [goog.events :as events]
-              [cljs.core.async :refer [put! <! >! chan timeout]]
-              [om.core :as om :include-macros true]
-              [sablono.core :as html :refer-macros [html]]
-              [cljs-http.client :as http]
-              [omtut-angular.utils :refer [guid]]))
+  (:require-macros [cljs.core.async.macros :refer [go alt!]])
+  (:require [cljs.core.async :refer [put! <! >! chan timeout]]
+            [om.core :as om :include-macros true]
+            [sablono.core :as html :refer-macros [html]]
+            [cljs-http.client :as http]
+            [omtut-angular.utils :refer [guid]]))
 
 (enable-console-print!)
 
