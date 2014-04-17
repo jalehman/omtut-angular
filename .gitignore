@@ -5,7 +5,11 @@ pom.xml
 /targets/
 /resources/public/js/
 /resources/private/
+<<<<<<< HEAD
 /resources/public/bower_components
+=======
+/resources/public/bower_components/
+>>>>>>> 7b4801460358ee3427fad4a588eea377e9c8b676
 /out/
 /target/
 .nrepl-port

@@ -1,0 +1,11 @@
+{
+  "name": "omtut-angular",
+  "description": "A starter project for Om",
+  "version": "0.0.0",
+  "homepage": "https://github.com/angular/angular-seed",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "~3.1.1"
+  }
+}
