@@ -67,6 +67,5 @@
       ;;                (mapv dommy/text (sel c [:li :span])))))
       )
 
-    ;; Without something like Karma, we can't do an e2e test that tests the URL.
-    ;; PhantomJS has no URLs, so yeah.
+
     ))
