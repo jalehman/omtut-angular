@@ -9,22 +9,16 @@
 
 (enable-console-print!)
 
-;; We'll get to this later.
 (def app-state
   (atom {:things []}))
 
-;; Om apps are built in ClojureScript -- there are no templates. Thus, you
-;; have the full power of the ClojureScript language at your disposal when
-;; writing your UI.
 (defn omtut-angular-app [app owner]
   (reify
     om/IRender
     (render [_]
-      ;; Here we `let` a dummy string to be rendered into the template.
       (let [text (str "yet" "!")]
         (html
          [:div
-          ;; And then concatenate it into our <p> element.
           [:p (str "Nothing here " text)]])))))
 
 (om/root omtut-angular-app app-state
