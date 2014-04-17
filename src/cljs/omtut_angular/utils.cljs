@@ -1,5 +1,6 @@
 (ns omtut-angular.utils
-  (:require [cljs.reader :as reader])
+  (:require [cljs.reader :as reader]
+            [om.core :as om :include-macros true])
   (:import [goog.ui IdGenerator]))
 
 (defn guid []

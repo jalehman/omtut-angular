@@ -1,7 +1,6 @@
 (ns omtut-angular.core
     (:require-macros [cljs.core.async.macros :refer [go alt!]])
-    (:require [goog.events :as events]
-              [cljs.core.async :refer [put! <! >! chan timeout]]
+    (:require [cljs.core.async :refer [put! <! >! chan timeout]]
               [om.core :as om :include-macros true]
               [sablono.core :as html :refer-macros [html]]
               [cljs-http.client :as http]
@@ -12,11 +11,11 @@
 (def app-state
   (atom
    {:phones
-    [{:name "Nexus S"
+    [{:name "Nexus S" :age 1
       :snippet "Fast just got faster with Nexus S."}
-     {:name "Motorola XOOM with Wi-Fi"
+     {:name "Motorola XOOM with Wi-Fi" :age 2
       :snippet "The Next, Next Generation tablet."}
-     {:name "MOTOROLA XOOM"
+     {:name "MOTOROLA XOOM" :age 3
       :snippet "The Next, Next Generation tablet."}]}))
 
 (defn omtut-angular-app
@@ -24,26 +23,32 @@
   (reify
     om/IInitState
     (init-state [_]
-      {:query ""})
+      {:query "" :order-prop "age"})
     om/IRenderState
-    (render-state [_ {:keys [query]}]
-      (let [phones' (map #(assoc % :hidden
-                            (not (search query (om/value %) [:name :snippet]))) phones)]
+    (render-state [_ {:keys [query order-prop]}]
+      (let [phones' (->> (filter #(search query (om/value %) [:name :snippet]) phones)
+                         (sort-by (keyword order-prop)))]
         (html
          [:div.container
           [:div.row
+           (.log js/console (clj->js phones'))
            [:div.col-lg-2
             "Search: "
             [:input
              {:type "text" :value query
-              :on-change #(handle-change % owner [:query])}]]
+              :on-change #(handle-change % owner [:query])}]
+
+            "Sort by:"
+            [:select {:on-change #(handle-change % owner [:order-prop])
+                      :default-value order-prop}
+             [:option {:value "name"} "Alphabetical"]
+             [:option {:value "age"}  "Newest"]]]
 
            [:div.col-lg-10
             [:ul
              (for [phone phones']
-               (when-not (:hidden phone)
-                 [:li (:name phone)
-                  [:p (:snippet phone)]]))]]]])))))
+               [:li (:name phone)
+                [:p (:snippet phone)]])]]]])))))
 
 (defn run! []
   (om/root omtut-angular-app app-state
