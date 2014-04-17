@@ -7,33 +7,34 @@
             [omtut-angular.core :as core])
   (:use-macros [dommy.macros :only [node sel sel1]]))
 
+;; We aren't dealing with any DI stuff, so all that really needs to be done is to
+;; mount the "phones-list" component instesad of "omtut-angular-app".
 (deftest phones-render-correctly?
-  (let [data {:phones
-              [{:name "Nexus S" :age 1
-                :snippet "Fast just got faster with Nexus S."}
-               {:name "Motorola XOOM with Wi-Fi" :age 2
-                :snippet "The Next, Next Generation tablet."}
-               {:name "MOTOROLA XOOM" :age 3
-                :snippet "The Next, Next Generation tablet."}]}]
+  (let [data [{:name "Nexus S" :age 1
+               :snippet "Fast just got faster with Nexus S."}
+              {:name "Motorola XOOM with Wi-Fi" :age 2
+               :snippet "The Next, Next Generation tablet."}
+              {:name "MOTOROLA XOOM" :age 3
+               :snippet "The Next, Next Generation tablet."}]]
 
     (testing "Three phones render"
       (is (= 3
              (let [c (common/new-container!)]
-               (om/root core/omtut-angular-app data {:target c})
+               (om/root core/phones-list data {:target c})
                (count (sel c :li))))))
 
     (testing "Filters the phone list by the query in the search box"
       (is (= 3
              (let [c (common/new-container!)]
                (om/root
-                (common/wrap-component core/omtut-angular-app)
+                (common/wrap-component core/phones-list)
                 data {:target c})
                (count (sel c :li)))))
 
       (is (= [1 "nexus"]
              (let [c (common/new-container!)]
                (om/root
-                (common/wrap-component core/omtut-angular-app
+                (common/wrap-component core/phones-list
                                        :state {:query "nexus"})
                 data {:target c})
                [(count (sel c :li)) (dommy/value (sel1 c :input))])))
@@ -41,7 +42,7 @@
       (is (= [2 "motorola"]
              (let [c (common/new-container!)]
                (om/root
-                (common/wrap-component core/omtut-angular-app
+                (common/wrap-component core/phones-list
                                        :state {:query "motorola"})
                 data {:target c})
                [(count (sel c :li)) (dommy/value (sel1 c :input))]))))
@@ -50,20 +51,20 @@
       (is (= ["Motorola XOOM with Wi-Fi" "MOTOROLA XOOM"]
              (let [c (common/new-container!)]
                (om/root
-                (common/wrap-component core/omtut-angular-app
+                (common/wrap-component core/phones-list
                                        :state {:query "tablet"})
                 data {:target c})
                (mapv dommy/text (sel c [:li :span])))))
 
-;;       For whatever reason, I cannot get this test to work.
+      ;;       For whatever reason, I cannot get this test to work.
 
-;;       (is (= ["MOTOROLA XOOM" "Motorola XOOM with Wi-Fi"]
-;;              (let [c (common/new-container!)]
-;;                (om/root
-;;                 (common/wrap-component core/omtut-angular-app
-;;                                        :state {:query "tablet"})
-;;                 data {:target c})
-;;                (js/React.addons.TestUtils.Simulate.click
-;;                 (sel1 c "option[value=\"name\"]"))
-;;                (mapv dommy/text (sel c [:li :span])))))
+      ;;       (is (= ["MOTOROLA XOOM" "Motorola XOOM with Wi-Fi"]
+      ;;              (let [c (common/new-container!)]
+      ;;                (om/root
+      ;;                 (common/wrap-component core/phones-list
+      ;;                                        :state {:query "tablet"})
+      ;;                 data {:target c})
+      ;;                (js/React.addons.TestUtils.Simulate.click
+      ;;                 (sel1 c "option[value=\"name\"]"))
+      ;;                (mapv dommy/text (sel c [:li :span])))))
       )))

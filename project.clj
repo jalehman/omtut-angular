@@ -11,7 +11,7 @@
                  ;; CLJS
                  [org.clojure/clojurescript "0.0-2173"]
                  [org.clojure/core.async "0.1.278.0-76b25b-alpha"]
-                 [cljs-http "0.1.9"]
+                 [cljs-http "0.1.8"]
                  [secretary "1.1.0"]
                  [sablono "0.2.14"]
                  [om "0.5.3"]
