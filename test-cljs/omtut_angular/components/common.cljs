@@ -31,3 +31,7 @@
     (om/component
      (om/build component app
                {:init-state init-state :state state :opts opts}))))
+
+(defn sim-click!
+  [node]
+  (js/React.addons.TestUtils.Simulate.click node))
