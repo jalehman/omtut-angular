@@ -20,3 +20,14 @@
   (let [[n s] (container-div)]
     (insert-container! n)
     (sel1 s)))
+
+(defn wrap-component
+  "Takes a component and options. Wraps a component with a call to `om/build`
+   so that we can mount the component with a call to `om/root` in a DOM container
+   (see `new-container!` above) and initialize it with the state/options that it
+   might contain in the wild."
+  [component & {:keys [init-state state opts]}]
+  (fn [app owner]
+    (om/component
+     (om/build component app
+               {:init-state init-state :state state :opts opts}))))

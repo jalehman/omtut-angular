@@ -7,10 +7,7 @@
             [omtut-angular.core :as core])
   (:use-macros [dommy.macros :only [node sel sel1]]))
 
-;; Since React constructs a "virtual" DOM, we need to verify that it renders correctly
-;; into an "actual" DOM.
 (deftest phones-render?
-  ;; We begin by providing some sample data (in this case, the same data)
   (let [data {:phones
               [{:name "Nexus S"
                 :snippet "Fast just got faster with Nexus S."}
@@ -19,14 +16,47 @@
                {:name "MOTOROLA XOOM"
                 :snippet "The Next, Next Generation tablet."}]}]
 
-    ;; We want to ensure that there are actually three phones in this case
-    ;; that get rendered into the DOM
     (testing "Three phones render"
       (is (= 3
-             ;; `new-container!` creates a DOM node with an auto-generated ID
-             ;; and returns the ID, so that we can provide a :target for the call
-             ;; to `om/root`
              (let [c (common/new-container!)]
                (om/root core/omtut-angular-app data {:target c})
-               ;; We then grab the list items and count them. Simple!
+               (count (sel c :li))))))
+
+    ;; Our "filter" uses a piece of component state called "query" to perform
+    ;; its search. Because Om components are pure functions, we can simulate any
+    ;; "query" by building it with its component state set up the way we want it.
+
+    ;; We have a new testing utility function called `wrap-component` now. In
+    ;; order to construct a component with state, we'll need a call to `om.core/build`;
+    ;; however, we need to be able to mount the component into the dummy DOM for testing
+    ;; with `om.core/root`. `wrap-component` allows us to do this. It's pretty simple.
+    ;; Pure functions for the win!
+
+    ;; Note: We could avoid this issue by putting the "query" into the cursor
+    ;; instead of in component state -- that decision is entirely up to you as the
+    ;; programmer. Either way, we should not have to write our application to be
+    ;; compatible with our testing system -- what we want is the reverse.
+
+    (testing "Filters the phone list by the query in the search box"
+      (is (= 3
+             (let [c (common/new-container!)]
+               (om/root
+                (common/wrap-component core/omtut-angular-app)
+                data {:target c})
+               (count (sel c :li)))))
+
+      (is (= 1
+             (let [c (common/new-container!)]
+               (om/root
+                (common/wrap-component core/omtut-angular-app
+                                       :state {:query "nexus"})
+                data {:target c})
+               (count (sel c :li)))))
+
+      (is (= 2
+             (let [c (common/new-container!)]
+               (om/root
+                (common/wrap-component core/omtut-angular-app
+                                       :state {:query "motorola"})
+                data {:target c})
                (count (sel c :li))))))))
