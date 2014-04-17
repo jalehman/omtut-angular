@@ -55,9 +55,8 @@
       ;; Here we preprocess the phones, calling our `search` function on each one.
       ;; Each call to `om.core/set-state!` as made in our `handle-change` function
       ;; triggers a re-render, resulting in a newly "searched" list of phones. Those
-      ;; that do not match are given a :hidden flag, and are not rendered.
-      (let [phones' (map #(assoc % :hidden
-                            (not (search query (om/value %) [:name :snippet]))) phones)]
+      ;; that match the search are appropriately "filtered".
+      (let [phones' (filter #(search query (om/value %) [:name :snippet]) phones)]
         (html
          [:div.container
           [:div.row
@@ -70,9 +69,8 @@
            [:div.col-lg-10
             [:ul
              (for [phone phones']
-               (when-not (:hidden phone)
-                 [:li (:name phone)
-                  [:p (:snippet phone)]]))]]]])))))
+               [:li (:name phone)
+                [:p (:snippet phone)]])]]]])))))
 
 (defn run! []
   (om/root omtut-angular-app app-state
