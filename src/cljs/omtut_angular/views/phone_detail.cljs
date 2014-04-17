@@ -4,16 +4,27 @@
               [om.core :as om :include-macros true]
               [sablono.core :as html :refer-macros [html]]))
 
+;; At this point in the Angular tutorial they write a filter. We're going
+;; to do this with a plain function. And give it a cooler name.
+
+(defn ->checkmark
+  [v]
+  (if v "\u2713" "\u2718"))
+
 (defn- spec-list
   [data owner {:keys [pairs title]}]
   (om/component
    (html
     [:li [:span title]
      [:dl
-      (for [[name k] pairs]
+      (for [[name k chk?] pairs]
         [:span
          [:dt name]
-         [:dd (get data k)]])]])))
+         (if chk?
+           ;; We need to use :dangerouslySetInnerHTML for the unicode characters
+           ;; to properly render.
+           [:dd {:dangerouslySetInnerHTML {:__html (->checkmark (get data k))}}]
+           [:dd (str (get data k))])])]])))
 
 (defn phone-detail
   [{:keys [phones route-params]} owner]
@@ -54,8 +65,8 @@
 
            (om/build spec-list (:connectivity phone)
                      {:opts {:title "Connectivity"
-                             :pairs [["Network Support" :cell] ["WiFi" :wifi] ["GPS" :gps]
-                                     ["Bluetooth" :bluetooth] ["Infrared" :infrared]]}})
+                             :pairs [["Network Support" :cell] ["WiFi" :wifi] ["GPS" :gps true]
+                                     ["Bluetooth" :bluetooth] ["Infrared" :infrared true]]}})
 
            (om/build spec-list (:android phone)
                      {:opts {:title "Android"
@@ -72,13 +83,13 @@
                      {:opts {:title "Display"
                              :pairs [["Screen size" :screenSize]
                                      ["Screen resolution" :screenResolution]
-                                     ["Touch screen" :touchScreen]]}})
+                                     ["Touch screen" :touchScreen true]]}})
 
            (om/build spec-list (:hardware phone)
                      {:opts {:title "Hardware"
-                             :pairs [["CPU" :cpu] ["USB" :usb] ["FM Radio" :fmRadio]
+                             :pairs [["CPU" :cpu] ["USB" :usb] ["FM Radio" :fmRadio true]
                                      ["Audio / headphone jack" :audioJack]
-                                     ["Accelerometer" :accelerometer]]}})
+                                     ["Accelerometer" :accelerometer true]]}})
 
            [:li [:span "Camera"]
             [:dl
