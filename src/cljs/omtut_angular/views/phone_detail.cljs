@@ -31,20 +31,26 @@
   (reify
     om/IWillMount
     (will-mount [_]
-      (put! (om/get-state owner [:chans :events])
-            [:load-phone (:phone-id (om/value route-params))]))
+      (let [events (om/get-state owner [:chans :events])]
+        ;; When the component mounts it's likely that the phone has not yet been retrieved
+        ;; from the server. We pass the owning component along with the phone id so that the
+        ;; handler can set the :active-image for us on page load.
+        (put! events [:load-phone
+                      {:phone-id (:phone-id (om/value route-params)) :owning owner}])))
     om/IRenderState
-    (render-state [_ _]
+    (render-state [_ {:keys [active-image]}]
       (let [{:keys [name images] :as phone} (get phones (:phone-id route-params))]
         (html
          [:div
-          [:img {:src (first images)}]
+          [:img {:src active-image}]
           [:h1 name]
           [:p (:description phone)]
 
           [:ul.phone-thumbs
            (for [img images]
-             [:li [:img {:src img}]])]
+             [:li
+              ;; On click, change the component state to reflect the active image.
+              [:img {:src img :on-click (fn [_] (om/set-state! owner :active-image img))}]])]
 
           [:ul.specs
            [:li [:span "Availability and Networks"]

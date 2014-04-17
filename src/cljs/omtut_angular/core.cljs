@@ -47,9 +47,10 @@
 
 (defn get-phone-detail
   "Mirrors the list version, but with the phone detail."
-  [app phone-id]
+  [app {:keys [phone-id owning]}]
   (go (let [pd (<! (get-phone-detail* app phone-id))]
-        (om/update! app [:phone-view :phones phone-id] pd))))
+        (om/update! app [:phone-view :phones phone-id] pd)
+        (om/set-state! owning :active-image (-> pd :images first)))))
 
 (defn handle-event
   [app owner [event data]]
