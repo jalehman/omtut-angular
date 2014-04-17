@@ -18,9 +18,6 @@
                :snippet "The Next, Next Generation tablet."}]}
         chans {:events (chan) :kill (chan)}]
 
-    ;; NOTE: Because the phones-list component now puts a value onto a channel,
-    ;; we now need to build the component with channels to replicate its actual
-    ;; environment. That way we don't get tons of errors.
     (testing "Three phones render"
       (is (= 3
              (let [c (common/new-container!)]
