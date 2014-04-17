@@ -3,7 +3,7 @@
     (:require [goog.events :as events]
               [cljs.core.async :refer [put! <! >! chan timeout]]
               [om.core :as om :include-macros true]
-              [om.dom :as dom :include-macros true]
+              [sablono.core :as html :refer-macros [html]]
               [cljs-http.client :as http]
               [omtut-angular.utils :refer [guid]]))
 
@@ -17,7 +17,8 @@
   (reify
     om/IRender
     (render [_]
-      (dom/div nil
-        (dom/h1 nil "omtut-angular is working!")))))
+      (html
+       [:div
+        [:h1 "omtut-angular is working!"]]))))
 
 (om/root omtut-angular-app app-state {:target (.getElementById js/document "content")})
