@@ -37,5 +37,8 @@
           [:li (:name phone)
            [:p (:snippet phone)]])]))))
 
-(om/root omtut-angular-app app-state
-         {:target (.getElementById js/document "content")})
+(defn run! []
+  (om/root omtut-angular-app app-state
+         {:target (.getElementById js/document "content")}))
+
+(set! (.-onload js/window) run!)
