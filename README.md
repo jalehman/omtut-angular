@@ -37,5 +37,5 @@ Hopefully someone with more background in CLJS testing can improve upon/find bet
 ## What's left out
 
 + Step 11 - REST and Custom Services: This involves use of Angular's $resource service, which doesn't really fit in well to the CLJS way of doing things.
-+ Step 12 - Applying Animations: This is more of a CSS thing than something related to Om. I don't plan demonstrating this.
++ Step 12 - Applying Animations: TBD
 
